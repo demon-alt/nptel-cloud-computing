@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EIA Quiz - Premium Edition</title>
+    <style>
+        :root { 
+            /* Light Mode Variables */
+            --primary: #444444; 
+            --accent: #6200ee;
+            --success: #00c853; 
+            --danger: #d50000; 
+            --bg: #f8f9fa; 
+            --surface: #ffffff;
+            --card-border: #e0e0e0;
+            --text-main: #202124;
+            --option-bg: #f1f3f4;
+            --option-hover: #e8eaed;
+            --header-bg: rgba(255, 255, 255, 0.95);
+        }
+        
+        body.dark-mode {
+            /* Dark Mode Overrides */
+            --primary: #e0e0e0; 
+            --accent: #bb86fc;
+            --bg: #0a0a0a; 
+            --surface: #1e1e1e;
+            --card-border: #333;
+            --text-main: #ffffff;
+            --option-bg: #252525;
+            --option-hover: #2d2d2d;
+            --header-bg: rgba(18, 18, 18, 0.95);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: var(--bg); 
+            color: var(--text-main);
+            margin: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Fixed Header - Adapts to Theme */
+        .header { 
+            width: 100%;
+            max-width: 600px;
+            position: sticky; 
+            top: 0; 
+            background: var(--header-bg); 
+            backdrop-filter: blur(10px);
+            padding: 15px; 
+            z-index: 100; 
+            border-bottom: 1px solid var(--card-border); 
+        }
+
+        /* Modern Redesigned Week Selector */
+        .selector-container {
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        select { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border-radius: 12px; 
+            border: 2px solid var(--accent); 
+            background: var(--surface); 
+            color: var(--text-main);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            appearance: none;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .selector-container::after {
+            content: '▼';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+            pointer-events: none;
+            font-size: 12px;
+        }
+
+        .stats-bar { 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 11px; 
+            margin-top: 10px;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        #quiz-wrapper {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        .quiz-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 25px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .q-text { font-size: 18px; line-height: 1.4; margin-bottom: 20px; color: var(--text-main); font-weight: 600; }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: var(--option-bg);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--text-main);
+        }
+
+        .option-label:hover { background: var(--option-hover); }
+        
+        input[type="radio"] { 
+            margin-right: 15px; 
+            accent-color: var(--accent); 
+            scale: 1.2; 
+        }
+
+        .option-label.selected { 
+            border-color: var(--accent); 
+            background: rgba(98, 0, 238, 0.1); 
+        }
+
+        .feedback-area {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .feedback-correct { background: rgba(0, 200, 83, 0.1); border: 1px solid var(--success); color: var(--success); }
+        .feedback-wrong { background: rgba(213, 0, 0, 0.1); border: 1px solid var(--danger); color: var(--danger); }
+        .description-box { margin-top: 10px; color: var(--primary); border-top: 1px solid var(--card-border); padding-top: 10px; font-style: italic; }
+
+        /* High Contrast Submit Button */
+        .controls { display: flex; gap: 10px; margin-top: 25px; }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .btn-submit { 
+            background: var(--accent); 
+            color: #ffffff !important; /* Forces white text for contrast */
+            box-shadow: 0 4px 15px rgba(98, 0, 238, 0.3);
+        }
+
+        .btn-submit:disabled { 
+            background: #cccccc; 
+            color: #777777 !important; 
+            box-shadow: none; 
+            cursor: not-allowed; 
+        }
+
+        .btn-next { 
+            background: var(--text-main); 
+            color: var(--surface); 
+        }
+
+        .progress-container { width: 100%; background: var(--option-bg); height: 8px; border-radius: 4px; margin-top: 15px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: 0.5s ease; }
+
+        /* Error Log Area */
+        #review-panel { width: 100%; max-width: 600px; padding: 20px; }
+        .log-card { 
+            background: var(--surface);
+            border: 1px solid var(--card-border);
+            border-left: 5px solid var(--danger); 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="dark-mode"> <div class="header">
+    <div class="selector-container">
+        <select id="week-selector" onchange="initQuiz()">
+            <option value="1">Week 1: Introduction</option>
+            <option value="2">Week 2: Virtualization I</option>
+            <option value="3">Week 3: Virtualization II</option>
+            <option value="4">Week 4: Architecture & Acts</option>
+            <option value="5">Week 5: Resource Management</option>
+            <option value="6">Week 6: Cloud Security</option>
+            <option value="7">Week 7: MCC</option>
+            <option value="8">Week 8: Docker & K8s</option>
+            <option value="9">Week 9: Fog Computing</option>
+            <option value="10">Week 10: Interoperability</option>
+            <option value="11">Week 11: Serverless</option>
+        </select>
+    </div>
+    
+    <div class="progress-container"><div id="progress-bar"></div></div>
+    
+    <div class="stats-bar">
+        <span>SCORE: <span id="current-score">0</span></span>
+        <span style="text-align:right">PROGRESS: <span id="q-count">0/0</span></span>
+    </div>
+</div>
+
+<div id="quiz-wrapper">
+    <div id="quiz-container" class="quiz-card"></div>
+    <div class="controls">
+        <button id="submit-btn" class="btn btn-submit" onclick="checkAnswer()" disabled>Submit Answer</button>
+        <button id="next-btn" class="btn btn-next" onclick="nextQuestion()" style="display:none">Next Question</button>
+    </div>
+</div>
+
+<div id="review-panel">
+    <h3 style="color:var(--danger); font-size: 14px; letter-spacing: 2px;">ERROR LOG</h3>
+    <div id="wrong-log"></div>
+    <button class="btn" style="background:transparent; color:var(--danger); border: 1px solid var(--danger); width: 100%; margin-top: 20px; font-size: 11px;" onclick="clearData()">Reset History</button>
+</div>
+
+<button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀️</button>
+
+<script>
+const quizData = {
+    1: [
+        { 
+            q: "Which one of the following statements least aligns with the NIST defined essential characteristics of cloud computing? [cite: 11]", 
+            options: ["On-demand self-service", "Rapid elasticity", "Guaranteed zero downtime for all services", "Measured service"], 
+            a: 2,
+            description: "NIST lists on-demand self-service, resource pooling, rapid elasticity, measured service, and broad network access; it does not include any absolute downtime guarantee. [cite: 17, 18]"
+        },
+        { 
+            q: "A user accesses Google Docs through a web browser and collaborates in real-time with others. From the user's perspective, Google Docs is best classified as: [cite: 20, 23]", 
+            options: ["PaaS", "IaaS", "SaaS", "FaaS"], 
+            a: 2,
+            description: "Google Docs is a provider's application accessible via a web browser. The user never manages servers or runtime environments, making it a Software as a Service (SaaS) model. [cite: 21, 29, 30, 31]"
+        },
+        { 
+            q: "Which of the following is a public cloud platform in typical commercial cloud computing? [cite: 33]", 
+            options: [
+                "Windows Server with Hyper-V installed on an organization's on-premise hardware", 
+                "Google Cloud Platform services accessible over the public Internet", 
+                "A private OpenStack cloud running inside a company's own data center", 
+                "VMware vSphere used for internal virtualization"
+            ], 
+            a: 1,
+            description: "A public cloud platform is operated by a third-party provider and made available to users over the public Internet. [cite: 42]"
+        },
+        { 
+            q: "Virtualization technology allows multiple virtual machines (VMs) to run on a single physical system. Which statement is the MOST accurate? [cite: 44, 45]", 
+            options: [
+                "Each VM always shares the same operating system kernel with the host OS", 
+                "Multiple VMs can run different operating systems on the same physical machine simultaneously", 
+                "Virtualization is only possible in cloud computing environments", 
+                "Virtualization prevents resource overcommitment on the host system"
+            ], 
+            a: 1,
+            description: "Modern hypervisors allow multiple VMs with different OSs to share the same physical hardware. Virtualization pre-dates cloud, and resource overcommitment is a feature often used. [cite: 51, 52]"
+        },
+        { 
+            q: "A distributed system is typically preferred when the task is: (i) Data-intensive, (ii) Compute-intensive, (iii) Latency-sensitive but confined to a single machine. [cite: 54, 55, 56, 57]", 
+            options: ["Only (i)", "Only (ii)", "(i) and (ii)", "(i), (ii), and (iii)"], 
+            a: 2,
+            description: "Distributed systems shine when tasks are data-intensive and compute-intensive. Latency-sensitive tasks confined to a single machine may suffer from distribution overhead. [cite: 67, 68]"
+        },
+        { 
+            q: "The combination of Service-Oriented Architecture (SOA) and Cloud Computing led to a paradigm where almost any IT capability can be delivered as a network-accessible service, referred to as: [cite: 70, 71]", 
+            options: ["FTP", "SNTP", "XaaS", "FaaS"], 
+            a: 2,
+            description: "XaaS stands for 'Anything/Everything as a Service', which is an umbrella term for delivering diverse IT services via the cloud. [cite: 77]"
+        },
+        { 
+            q: "Which of the following statements about PaaS (Platform as a Service) are CORRECT? (i) Abstracts infrastructure, (ii) Provides integrated services like databases, (iii) Gives full root-level VM access, (iv) Supports rapid deployment. [cite: 80, 81, 82, 83, 84]", 
+            options: ["(i), (ii), and (iv) only", "(ii) and (iii) only", "(i) and (iii) only", "(i), (ii), (iii), and (iv)"], 
+            a: 0,
+            description: "PaaS hides infrastructure details to enable rapid development. Full root-level access to underlying VMs is not typical in PaaS; that is closer to IaaS. [cite: 90, 91]"
+        },
+        { 
+            q: "In the context of virtualization, which statement best distinguishes a Type-1 (bare-metal) hypervisor from a Type-2 hypervisor? [cite: 96, 97]", 
+            options: [
+                "Type-1 runs on top of an OS; Type-2 runs directly on hardware", 
+                "Type-1 typically gives lower virtualization overhead because it runs directly on hardware", 
+                "Type-2 can run multiple OSs; Type-1 cannot", 
+                "Type-1 is only used for desktop virtualization"
+            ], 
+            a: 1,
+            description: "Type-1 runs directly on bare metal/hardware, typically resulting in lower overhead. Type-2 runs on top of a host OS. [cite: 103, 104]"
+        },
+        { 
+            q: "Which of the following is a valid example of Platform as a Service (PaaS)? [cite: 106]", 
+            options: [
+                "A server image you configure and manage yourself on a rented VM", 
+                "A managed relational database instance with automatic backups and scaling", 
+                "A virtual machine where you install your own operating system", 
+                "A bare-metal server managed entirely by your organization"
+            ], 
+            a: 1,
+            description: "A managed relational database is PaaS because the provider handles infrastructure and maintenance, allowing developers to focus on application logic. [cite: 112]"
+        },
+        { 
+            q: "What is a distributed computer system consisting of interconnected stand-alone computers working together as an integrated resource, typically in close proximity? [cite: 114, 115]", 
+            options: ["Grid", "Cluster", "Cloud", "Node"], 
+            a: 1,
+            description: "A cluster is a set of tightly-coupled computers working as a single system. Grids are more loosely coupled and geographically distributed. [cite: 125, 126]"
+        }
+    ],
+2: [
+        { 
+            q: "Para-virtualization is best described as:", 
+            options: [
+                "Running an unmodified guest OS on top of a hypervisor with full CPU trapping.", 
+                "Modifying the guest OS to use hypervisor-aware interfaces for certain privileged operations.", 
+                "Emulating hardware in software so guests don't need any changes.", 
+                "Running containers that share the host kernel."
+            ], 
+            a: 1,
+            description: "Para-virtualization requires the guest OS to be modified to call hypervisor-friendly interfaces for privileged operations. This improves performance but requires specific OS changes[cite: 141]."
+        },
+        { 
+            q: "Which statement about a community cloud is MOST accurate?", 
+            options: [
+                "Owned and operated by a single organization for its exclusive use.", 
+                "Shared infrastructure among several organizations with similar compliance/regulatory needs.", 
+                "A public cloud account with extra IAM roles.", 
+                "Always the most cost-effective option for small startups."
+            ], 
+            a: 1,
+            description: "A community cloud shares infrastructure among organizations with common concerns, such as regulatory or domain-specific requirements[cite: 149]."
+        },
+        { 
+            q: "When an organization considers using an outsourced private cloud, which of the following should be explicitly considered? (i) Network dependency and SLAS, (ii) Risks from multi-tenancy / co-residency, (iii) Legal/regulatory/compliance implications of where data is hosted.", 
+            options: ["Only (i)", "(i) and (ii) only", "(i) and (iii) only", "(i), (ii) and (iii)"], 
+            a: 3,
+            description: "Outsourcing a private cloud raises concerns regarding network reliability and SLAs, potential multi-tenancy risks even in hosted environments, and legal or compliance issues based on data location[cite: 161]."
+        },
+        { 
+            q: "When processing very large XML files in a memory-constrained environment with a need for explicit control over parsing flow, which XML parser API is MOST appropriate?", 
+            options: [
+                "DOM (loads the entire XML document into memory as a tree structure)", 
+                "SAX (push-based, event-driven parsing with minimal memory usage but limited control)", 
+                "StAX (pull-based, event-driven parsing offering low memory usage with explicit control)", 
+                "All are equally suitable depending on developer preference"
+            ], 
+            a: 2,
+            description: "StAX is a pull-based, event-driven parser that allows applications to control the process while using significantly less memory than DOM and providing more flexible control than SAX[cite: 169, 170]."
+        },
+        { 
+            q: "A hypervisor with hardware-assisted virtualization shows 40% CPU usage while VMs report only 15% utilization. What explains the 25% gap?", 
+            options: [
+                "The hypervisor isn't using hardware extensions; it's relying on binary translation.", 
+                "Context switching, memory management, and I/O emulation overhead-normal in virtualized environments.", 
+                "Unmodified OS cannot fully utilize hardware virtualization.", 
+                "This indicates efficient resource overcommitment."
+            ], 
+            a: 1,
+            description: "Hardware-assisted virtualization reduces but doesn't eliminate hypervisor overhead. CPU cycles are consumed by context switching, shadow page tables, and device emulation that are not directly visible to guest OS metrics[cite: 178, 179]."
+        },
+        { 
+            q: "Which statement clarifies 'Hypervisor,' 'Virtual Machine Monitor,' and 'Cluster Manager'?", 
+            options: [
+                "All four terms are synonymous.", 
+                "Hypervisor and Virtual Machine Monitor are synonymous; Virtual Machine Manager adds orchestration; Cluster Manager manages physical machines.", 
+                "Hypervisor = Type 1 only; Virtual Machine Monitor = Type 2 only.", 
+                "They refer to different layers in a multi-tier virtualization stack."
+            ], 
+            a: 1,
+            description: "Hypervisor and VMM are interchangeable core terms. A Virtual Machine Manager implies additional provisioning/orchestration, while a Cluster Manager manages multiple physical machines rather than individual VMs[cite: 187, 192]."
+        },
+        { 
+            q: "State True or False: Speed and flexibility are disadvantages of para-virtualization.", 
+            options: ["True", "False"], 
+            a: 0,
+            description: "Para-virtualization requires guest OS modifications, which reduces flexibility because only modified systems can be used. Furthermore, performance gains depend on OS support, making speed less universally optimal[cite: 199, 200, 201]."
+        },
+        { 
+            q: "Which mechanism was specifically designed as a registry/discovery approach for web services?", 
+            options: ["SMS", "HTTP (as a generic transfer protocol)", "SMTP", "UDDI (Universal Description, Discovery, and Integration)"], 
+            a: 3,
+            description: "UDDI is the specific registry model and protocol designed for discovering web services, whereas HTTP and SMTP are primarily transport protocols[cite: 208]."
+        },
+        { 
+            q: "Which problems are effectively addressed by traditional web services? (i) Firewall transparency, (ii) Interoperability, (iii) Ultra-low-latency communication, (iv) Service discovery through UDDI.", 
+            options: ["Only (i) and (ii) are addressed", "(i), (ii), and (iv) are addressed; (iii) is NOT addressed", "Only (ii) is addressed", "All are addressed"], 
+            a: 1,
+            description: "Traditional web services address firewall transparency, interoperability, and discovery, but they do not provide ultra-low-latency real-time communication because XML parsing and SOAP overhead introduce delays[cite: 224, 225]."
+        },
+        { 
+            q: "Service-Oriented Architecture (SOA) models relationships primarily among which entities?", 
+            options: [
+                "Two entities (a service provider and a requestor) only", 
+                "Two entities (a service provider and a broker) only", 
+                "Three entities (a service provider, a service requestor, and a broker/registry)", 
+                "Three entities (a service provider, a service requestor, and a hypervisor)"
+            ], 
+            a: 2,
+            description: "SOA primarily involves three entities: the service provider (implements/publishes), the service requestor (consumes), and the service broker (registry/mediator for discovery and binding)[cite: 230, 231]."
+        }
+    ],
+3: [
+        { 
+            q: "Which of the following is least likely to be specified in an operational cloud Service Level Agreement (SLA)?", 
+            options: [
+                "Recovery Time Objective (RTO)", 
+                "Exact encryption algorithm and key storage procedures", 
+                "Mean Time To Repair (MTTR) for incidents", 
+                "Penalty / credit calculation for downtime"
+            ], 
+            a: 1,
+            description: "SLAs describe service-level commitments like RTO and MTTR; low-level implementation details like exact encryption algorithms belong in security or operational documents instead[cite: 248, 249]."
+        },
+        { 
+            q: "Which level is typically included in a multilevel cloud Service Level Agreement (SLA)?", 
+            options: [
+                "Corporate/provider-wide obligations", 
+                "Individual developer employment contracts", 
+                "Unrelated third-party agreements", 
+                "Hardware vendor warranties"
+            ], 
+            a: 0,
+            description: "A true multilevel SLA includes corporate/provider-wide obligations that define baseline commitments for all customers[cite: 256, 257]."
+        },
+        { 
+            q: "In a three-tier multilevel SLA where corporate (95%), customer (98%), and service-level (99.9%) uptimes differ, which level is the provider legally bound to honor during a disruption?", 
+            options: [
+                "Corporate-level SLA, as it's the broadest agreement", 
+                "Customer-level SLA, as it's the middle ground", 
+                "Service-level SLA, as it's the most specific agreement", 
+                "The provider can choose the lowest applicable SLA"
+            ], 
+            a: 2,
+            description: "The service-level SLA is the most granular and specific to service delivery, making it the legally binding level in case of conflicts[cite: 270, 271]."
+        },
+        { 
+            q: "Which combination of metrics is most commonly included in production cloud SLAs to measure availability and responsiveness?", 
+            options: [
+                "Uptime percentage and mean time to respond (MTTR)", 
+                "Developer salary and uptime percentage", 
+                "IP address range and timezone of servers", 
+                "Source-code commit frequency and bug count"
+            ], 
+            a: 0,
+            description: "Uptime (availability) and response/recovery metrics (MTTR) are standard for measuring SLA compliance[cite: 280, 281]."
+        },
+        { 
+            q: "A cloud service is guaranteed to handle 10,000 requests/hour with 99.5% success. How many failed requests per hour are acceptable under the SLA?", 
+            options: ["5", "10", "50", "500"], 
+            a: 2,
+            description: "A 99.5% success rate implies a 0.5% failure rate. 0.5% of 10,000 is 50 requests[cite: 289, 290, 291]."
+        },
+        { 
+            q: "Which feature most clearly distinguishes parallel (analytic) databases from a single-node traditional RDBMS in cloud analytics?", 
+            options: [
+                "Support for SQL queries", 
+                "Multi-node parallel query execution with data partitioning", 
+                "Transaction rollback (ACID) support", 
+                "Use of normalized schemas only"
+            ], 
+            a: 1,
+            description: "Parallel analytic databases scale by executing queries across multiple nodes using data partitioning, such as shared-nothing architectures[cite: 302, 303]."
+        },
+        { 
+            q: "For a real-time analytics pipeline requiring 1 million events/sec and sub-second latency, which architectural choice is LEAST suitable?", 
+            options: [
+                "Apache Kafka with Apache Flink for stream processing", 
+                "Google Cloud Dataflow with shuffling disabled", 
+                "AWS S3 with batch processing every 5 minutes", 
+                "Azure Event Hubs with Structured Streaming"
+            ], 
+            a: 2,
+            description: "Batch processing every 5 minutes introduces inherent latency that violates sub-second requirements[cite: 314, 315, 316]."
+        },
+        { 
+            q: "When designing a scalable pipeline to process many large video files in parallel, which storage choice is most suitable?", 
+            options: [
+                "Managed relational DB (RDS/Aurora)", 
+                "Object storage with Hadoop/Spark connector (e.g., S3/GCS)", 
+                "Single-node block volume attached to a VM", 
+                "A small in-memory cache only"
+            ], 
+            a: 1,
+            description: "Object storage like S3 or GCS is specifically designed for large binary blobs and massive parallel processing[cite: 325, 329]."
+        },
+        { 
+            q: "A MapReduce job runs out of disk space during the reduce phase merge. What is the most likely cause and solution?", 
+            options: [
+                "Inefficient mapper logic; rewrite the function", 
+                "The combiner phase didn't run; ensure it is explicitly configured", 
+                "The shuffle didn't deduplicate; increase reducers", 
+                "Network bandwidth saturation; add more nodes"
+            ], 
+            a: 1,
+            description: "Without a combiner to pre-aggregate data locally on mapper nodes, the volume of intermediate data can overwhelm reducers during the merge phase[cite: 340, 341, 343]."
+        },
+        { 
+            q: "In an OpenStack deployment, if a compute node supports 900 physical vCPUs and the overcommit ratio is 4.5:1, what is the total number of vCPUs that can be allocated?", 
+            options: ["4100", "4150", "4050", "4200"], 
+            a: 2,
+            description: "Total allocatable vCPUs are calculated by multiplying physical vCPUs (900) by the overcommit ratio (4.5), resulting in 4,050[cite: 351, 355]."
+        }
+    ],
+  4: [
+        {
+            q: "In Azure SQL Database, which of the following statements about compute tiers is/are CORRECT?",
+            options: [
+                "Business Critical tier uses remote premium storage for cost optimization",
+                "General Purpose tier can replicate synchronously across regions without additional geo-replication configuration",
+                "Hyperscale tier allows automatic scaling of storage beyond 100TB without manual intervention",
+                "All the above"
+            ],
+            a: 2,
+            description: "Hyperscale tier's primary strength is automatic, elastic scaling of storage beyond 100TB without manual intervention. Business Critical actually uses local SSD, and General Purpose uses asynchronous replication by default."
+        },
+        {
+            q: "An Azure VM supports attaching additional data disks. What ultimately limits the maximum number of attachable disks?",
+            options: [
+                "Azure subscription type",
+                "Operating system",
+                "VM size and SKU",
+                "Region availability"
+            ],
+            a: 2,
+            description: "Disk limits are strictly enforced by the VM size (SKU). The operating system and region do not affect the specific count limits for attachable disks."
+        },
+        {
+            q: "A Linux VM requires passwordless authentication. What is the MOST SECURE approach beyond SSH keys?",
+            options: [
+                "SSH public key authentication with file permissions (600)",
+                "Azure AD SSH login through Azure Bastion or VM extension",
+                "Service Principal with client secret",
+                "Certificate-based SSH authentication"
+            ],
+            a: 1,
+            description: "Azure AD SSH eliminates the need to manage local SSH keys, and using it through Bastion removes internet-facing SSH ports entirely, providing superior security."
+        },
+        {
+            q: "Standard (S1) App Service plan supports 10 deployment slots. What additional capability does Premium (P2v3) provide beyond more slots (20)?",
+            options: [
+                "Faster swap operations",
+                "Traffic warm-up before swap (auto-swap with warm-up)",
+                "Slots no longer consume CPU/memory quota",
+                "Independent scaling per slot"
+            ],
+            a: 1,
+            description: "The Premium tier adds 'traffic warm-up,' ensuring the staging slot is fully loaded before the swap occurs to reduce request failures."
+        },
+        {
+            q: "You want an Azure App Service to securely access secrets without exposing credentials even in environment variables. What should you use?",
+            options: [
+                "App Settings",
+                "Service Principal",
+                "Managed Identity + Key Vault",
+                "Azure Storage Access Keys"
+            ],
+            a: 2,
+            description: "Using Managed Identity with Key Vault is the most secure method because Managed Identity eliminates the need for developers to handle credentials or secrets entirely."
+        },
+        {
+            q: "An application requires strong consistency, multi-row transactions, and sub-second global latency. Which GCP database best fits?",
+            options: [
+                "Cloud Firestore (multi-region)",
+                "Cloud Spanner",
+                "Cloud Bigtable",
+                "BigQuery"
+            ],
+            a: 1,
+            description: "Cloud Spanner is designed for global distribution with strong consistency and ACID transactions for OLTP workloads. Firestore typically offers eventual consistency in global configurations."
+        },
+        {
+            q: "In OpenStack, which service is responsible for deciding on which compute host a VM will run?",
+            options: [
+                "Neutron",
+                "Nova Scheduler",
+                "Nova Compute",
+                "Keystone"
+            ],
+            a: 1,
+            description: "While Nova Compute is responsible for running the VM, the Nova Scheduler is the specific component that decides the placement (host selection) of the VM."
+        },
+        {
+            q: "Which GCP compute option is best suited for event-driven container execution without cluster management?",
+            options: [
+                "Compute Engine",
+                "GKE Autopilot",
+                "App Engine Standard",
+                "Cloud Run"
+            ],
+            a: 3,
+            description: "Cloud Run is a serverless, container-native platform that fully abstracts infrastructure and Kubernetes management, making it ideal for event-driven execution."
+        },
+        {
+            q: "Your application needs to store petabytes of time-series IoT sensor data with very high write throughput, Millisecond read latency and No complex joins required then what is the best storage choice?",
+            options: [
+                "BigQuery",
+                "Cloud SQL",
+                "Bigtable",
+                "Firestore"
+            ],
+            a: 2,
+            description: "Bigtable is purpose-built for massive-scale, low-latency time-series and key-value workloads. BigQuery is better suited for analytics rather than low-latency serving."
+        },
+        {
+            q: "Instances inside a tenant network can communicate with each other but cannot obtain IP addresses automatically. What is the most likely cause?",
+            options: [
+                "Neutron L3 agent failure",
+                "Neutron DHCP agent failure",
+                "Nova conductor failure",
+                "Glance metadata corruption"
+            ],
+            a: 1,
+            description: "The DHCP agent is responsible for providing IP address allocations to instances. If it fails, instances will not be able to obtain an IP automatically."
+        }
+    ],
+  5: [
+        {
+            q: "A cloud provider guarantees 99% availability. An application is scheduled to run Y hours per day for 20 days. The observed downtime is 4 hours, and the SLA is violated. What is the maximum possible value of Y?",
+            options: ["Y < 20", "Y ≥ 20.2", "Y = 24", "Insufficient data"],
+            a: 0,
+            description: "To violate a 99% SLA with 4 hours of downtime, the total scheduled time (20Y) must be less than 400 hours (since 4/400 = 1%). Therefore, 20Y < 400 leads to Y < 20."
+        },
+        {
+            q: "Which statement is always true in a multi-core cloud server?",
+            options: [
+                "Power consumption decreases as cores increase",
+                "Power consumption increases strictly linearly with cores",
+                "Activating more cores increases instantaneous power draw",
+                "Energy per task always increases with more cores"
+            ],
+            a: 2,
+            description: "Activating more cores increases the instantaneous power draw. While linearity and energy efficiency per task can vary based on the workload, the increase in instant power is a constant physical reality."
+        },
+        {
+            q: "An enterprise transitioning from pure on-premise infrastructure to a hybrid cloud model will experience the most significant change in which economic aspect?",
+            options: [
+                "Operating expenditure increases relative to capital expenditure",
+                "Total cost of ownership (TCO) always decreases",
+                "Fixed costs does not decrease while variable costs increase",
+                "Annual revenue decreases due to infrastructure overhead"
+            ],
+            a: 0,
+            description: "The most dramatic shift in hybrid cloud is moving from upfront Capital Expenditure (CapEx) for hardware to recurring Operational Expenditure (OpEx) for cloud subscriptions."
+        },
+        {
+            q: "Which cloud characteristic most directly improves cost efficiency for unpredictable workloads?",
+            options: ["High availability", "Elastic scalability", "Geographic redundancy", "Dedicated hardware"],
+            a: 1,
+            description: "Elasticity allows a system to scale resources up or down automatically based on demand, ensuring you don't pay for idle hardware during low-traffic periods."
+        },
+        {
+            q: "Which technology allows multiple operating systems to run on the same physical server?",
+            options: ["Containerization", "Virtualization", "Load balancing", "RAID"],
+            a: 1,
+            description: "Virtualization uses a hypervisor to abstract physical hardware, allowing multiple independent operating system instances to run on a single physical machine."
+        },
+        {
+            q: "Which factor MOST improves MapReduce performance in the cloud?",
+            options: [
+                "Increasing reducer count",
+                "Increasing replication factor",
+                "Scheduling mappers on nodes storing the data",
+                "Using larger block size only"
+            ],
+            a: 2,
+            description: "Data locality—scheduling mappers on the specific nodes where the data resides—minimizes the need for massive data transfers across the network, significantly boosting performance."
+        },
+        {
+            q: "Increasing HDFS block size generally results in:",
+            options: [
+                "More parallelism",
+                "Fewer mappers & reduced scheduling overhead",
+                "More shuffle traffic",
+                "Reduced fault tolerance"
+            ],
+            a: 1,
+            description: "Larger HDFS block sizes create fewer input splits. This results in a smaller number of map tasks, which reduces the overhead required to schedule and manage those tasks."
+        },
+        {
+            q: "In a cloud data center, an organization must choose between containerization and full virtualization for a high-density workload. Which statement best reflects the trade-off?",
+            options: [
+                "Containers provide stronger isolation than VMs because they use separate kernels",
+                "VMs have lower overhead because they share the host OS kernel",
+                "Containers achieve higher density but weaker isolation compared to VMs",
+                "Both have identical resource overhead"
+            ],
+            a: 2,
+            description: "Containers share the host OS kernel, making them lightweight for high density, but this shared kernel results in weaker isolation compared to the hardware-level abstraction of VMs."
+        },
+        {
+            q: "A cloud provider runs 8 physical servers hosting 32 VMs with 50% CPU utilization. After consolidation to 5 servers, utilization hits 75%. Which consequence is most likely?",
+            options: [
+                "Total power consumption decreased; SLA violation risk increased",
+                "Total power consumption increased; SLA improved",
+                "Total power consumption decreased; SLA unaffected",
+                "Insufficient data to determine impact"
+            ],
+            a: 0,
+            description: "Fewer active servers reduce power (less idle draw), but higher utilization leaves less 'headroom' for spikes, which increases the risk of performance lag and SLA violations."
+        },
+        {
+            q: "Which resource management technique helps avoid hotspots in a cloud cluster?",
+            options: ["Energy-aware scheduling", "VM migration / load balancing", "Increasing replication factor", "Using larger HDFS blocks"],
+            a: 1,
+            description: "Live VM migration and load balancing redistribute active workloads across the cluster, preventing any single physical host from becoming a bottleneck or 'hotspot'."
+        }
+    ],
+   6: [
+        {
+            q: "An attacker captures a legitimate authentication token from a user session and replays that token later to perform actions as the user. This kind of attack primarily compromises which security property?",
+            options: ["Confidentiality", "Integrity", "Availability", "Authenticity"],
+            a: 3,
+            description: "Replaying a captured token allows an attacker to impersonate a legitimate user, which directly undermines authenticity—the assurance that an entity is who it claims to be."
+        },
+        {
+            q: "A well-crafted phishing email (that impersonates a bank and convinces a user to provide credentials) can affect which of the following?",
+            options: ["Confidentiality", "Availability", "Integrity", "Authenticity"],
+            a: 0,
+            description: "The primary goal of phishing is to trick users into revealing secrets like passwords. Once provided, the confidentiality of that data is lost because an unauthorized party has access to it."
+        },
+        {
+            q: "Which of the following is a passive attack?",
+            options: [
+                "Modifying packets in transit to change their payload",
+                "Injecting forged packets into an existing TCP connection",
+                "Traffic analysis to infer communication patterns between two hosts",
+                "Launching a Denial-of-Service (DoS) attack to disrupt service"
+            ],
+            a: 2,
+            description: "A passive attack involves monitoring or observing communication without altering data. Traffic analysis studies patterns (timing, frequency) without modifying any information."
+        },
+        {
+            q: "An attacker floods a web application with slow HTTP POSTs that hold connections open and exhaust the server’s connection pool. This attack is best classified as:",
+            options: ["Disruption", "Disclosure", "Usurpation", "Deception"],
+            a: 0,
+            description: "This is a form of Denial-of-Service that degrades or interrupts normal service for legitimate clients, making 'Disruption' the correct classification."
+        },
+        {
+            q: "Which activity both attempts to exploit vulnerabilities and demonstrates real-world impact (often requiring written authorization before it’s performed)?",
+            options: ["Reconnaissance", "Vulnerability scanning", "Penetration testing", "Post-attack investigation"],
+            a: 2,
+            description: "Penetration testing actively exploits vulnerabilities to show practical impact. Due to its intrusive nature, it requires explicit permission from the organization."
+        },
+        {
+            q: "Which of the following mechanisms most directly provides non-repudiation for an online financial transaction?",
+            options: [
+                "Using a strong password over HTTPS",
+                "Encrypting data using a shared symmetric key",
+                "Logging IP addresses and timestamps in a database",
+                "Digitally signing the transaction with the sender’s private key"
+            ],
+            a: 3,
+            description: "Digital signatures tied to a sender's private key provide cryptographic proof of origin, ensuring the sender cannot later deny performing the transaction."
+        },
+        {
+            q: "Statement I: Authorization is the process of verifying the identity of a user. Statement II: Non-repudiation ensures that a sender cannot later deny having sent a specific message.",
+            options: ["I TRUE, II FALSE", "I FALSE, II TRUE", "Both TRUE", "Both FALSE"],
+            a: 1,
+            description: "Statement I is false because authentication (not authorization) verifies identity. Statement II is true as non-repudiation ensures accountability for sent messages."
+        },
+        {
+            q: "A start-up wants to upload application code and have the provider manage the OS, middleware, and runtime, while they manage settings and scaling. Which cloud model fits?",
+            options: ["SaaS", "IaaS", "PaaS", "DaaS"],
+            a: 2,
+            description: "Platform-as-a-Service (PaaS) provides a managed environment (runtime/middleware) so developers can focus on code without managing underlying server OS or patching."
+        },
+        {
+            q: "A law requiring personal data to be stored and processed only within a country’s geographic boundaries is related to which cloud security risk category?",
+            options: ["Regulatory Compliance & Audit", "Data Location", "Disaster Recovery", "Investigative Support"],
+            a: 1,
+            description: "While driven by regulation, the specific technical risk category is 'Data Location,' which focuses on the physical geography where data resides."
+        },
+        {
+            q: "Vendor lock-in is most directly associated with which long-term viability challenge?",
+            options: [
+                "Difficulty in migrating data to another provider",
+                "Unauthorized data disclosure",
+                "Increased regulatory audits",
+                "Privileged user misuse"
+            ],
+            a: 0,
+            description: "Vendor lock-in occurs when proprietary formats or APIs make it extremely difficult or costly for a customer to migrate their applications and data to a different provider."
+        }
+    ],
+ 7: [
+        {
+            q: "In a mobile cloud gaming application, users frequently experience frame drops and lag when moving between different Wi‑Fi and cellular networks. The primary underlying challenge specific to Mobile Cloud Computing (MCC) in this scenario is:",
+            options: [
+                "Insufficient number of installed games on the mobile device",
+                "High dependency on wide‑area network conditions for remote execution",
+                "Overprovisioned CPU and memory on the mobile device",
+                "Removal of mobile device caches during gameplay"
+            ],
+            a: 1,
+            description: "MCC relies on remote servers for intensive computation. As the device moves across heterogeneous networks, variations in latency and bandwidth cause performance degradation due to heavy network dependency."
+        },
+        {
+            q: "Which of the following is the primary reason for deploying a cloudlet (micro data center) in a campus or stadium?",
+            options: [
+                "To eliminate the need for encryption between device and cloudlet",
+                "To provide low-latency compute for AR/VR and other real-time applications close to users",
+                "To guarantee compliance with global data sovereignty laws",
+                "To permanently replace centralized cloud data centers"
+            ],
+            a: 1,
+            description: "Cloudlets bring computation closer to end users to minimize round-trip delays, making them ideal for supporting real-time, latency-sensitive applications like AR/VR and interactive gaming."
+        },
+        {
+            q: "Dynamic offloading decision engines often consider an energy-delay trade-off. Which measured parameter below is least useful for that decision at runtime?",
+            options: [
+                "Current cellular bandwidth and RTT",
+                "Device battery remaining (percentage)",
+                "Number of apps installed on the device",
+                "Estimated CPU time for the task locally"
+            ],
+            a: 2,
+            description: "The number of installed apps is irrelevant to a specific task's execution. In contrast, bandwidth, battery state, and local CPU estimation are critical factors for deciding whether to offload."
+        },
+        {
+            q: "A university deploys a small server cluster inside its campus cafeteria to support AR‑based menu visualization for smartphones. This on‑site resource is best described as:",
+            options: [
+                "A global hyperscale cloud data center",
+                "A cloudlet placed close to end users",
+                "A personal hotspot on a student’s phone",
+                "A satellite relay node in geostationary orbit"
+            ],
+            a: 1,
+            description: "A cloudlet is specifically defined as a small-scale data center placed near mobile users to support low-latency offloading for nearby mobile devices."
+        },
+        {
+            q: "A mobile banking app uses MCC to process transactions on cloud servers. Which of the following is the most critical security concern in this context?",
+            options: [
+                "The screen size of the mobile device is too small",
+                "The app icon resolution being too high",
+                "Excessive variety of smartphone colors available in the market",
+                "Confidentiality of sensitive data while it is transmitted and processed"
+            ],
+            a: 3,
+            description: "When processing financial data via MCC, the primary security priority is ensuring the confidentiality and privacy of sensitive information during its transmission and remote processing."
+        },
+        {
+            q: "Which of the following is a key advantage of Fog Computing over Cloud Computing?",
+            options: [
+                "Better support for real-time applications like healthcare monitoring and autonomous vehicles",
+                "Higher centralization of resources",
+                "Infinite storage capacity",
+                "Removal of network infrastructure"
+            ],
+            a: 0,
+            description: "Fog computing reduces communication delays by processing data locally, providing superior support for real-time, delay-sensitive applications compared to distant cloud centers."
+        },
+        {
+            q: "Which of the following best explains why 5G + Edge/Fog is often recommended for real-time remote healthcare monitoring?",
+            options: [
+                "5G guarantees zero packet loss in all deployments",
+                "5G replaces the need for any local processing hardware",
+                "Edge processing reduces decision latency while 5G offers low transport latency and high reliability",
+                "Edge nodes make patient data public for faster access"
+            ],
+            a: 2,
+            description: "The combination of 5G's high reliability/low transport latency and Edge computing's localized processing minimizes end-to-end delay for critical healthcare decisions."
+        },
+        {
+            q: "In geospatial cloud workflows that process very large satellite image tiles, which optimization typically gives the most direct improvement in parallel processing throughput?",
+            options: [
+                "Increasing on-device screen resolution of the operator’s laptop",
+                "Using a single-threaded processing pipeline to avoid synchronization overhead",
+                "Renaming files to shorter filenames to reduce I/O time",
+                "Partitioning large raster tiles into spatially-indexed blocks processed in parallel"
+            ],
+            a: 3,
+            description: "Processing massive satellite imagery (multi-GB/TB) efficiently requires partitioning data into smaller blocks that can be handled simultaneously by distributed computing architectures."
+        },
+        {
+            q: "A startup processes global high‑resolution satellite imagery and LiDAR data. When migrating to a geospatial cloud, which challenge is most fundamental from a data‑processing perspective?",
+            options: [
+                "Extremely high computation and storage demands for massive raster and vector datasets",
+                "The general lack of public interest in environmental topics",
+                "The impossibility of running any GIS software on cloud infrastructure",
+                "The mandatory removal of open geospatial standards in cloud systems"
+            ],
+            a: 0,
+            description: "The primary challenge is the massive volume of data produced by satellite and LiDAR sensors, which necessitates high-performance computing and parallel processing capabilities."
+        },
+        {
+            q: "A smart healthcare system must raise ECG abnormality alerts within a few hundred milliseconds. Which combination is most appropriate?",
+            options: [
+                "Batch analytics in a distant cloud region + periodic manual report downloads",
+                "Pure cloud processing over a high‑latency satellite link",
+                "Fog/Edge nodes performing local pre‑processing + low‑latency wireless access network (e.g., 5G)",
+                "Storing all data offline on the device and uploading it once per day"
+            ],
+            a: 2,
+            description: "Strict sub-second latency requirements can only be met by processing data near the patient (Edge/Fog) and using high-speed, low-latency communication like 5G."
+        }
+    ],
+   8: [
+        {
+            q: "In Docker, which command will show all containers (both running and stopped) on the host?",
+            options: [
+                "docker ps",
+                "docker ps -a",
+                "docker container run",
+                "docker images"
+            ],
+            a: 1,
+            description: "The 'docker ps' command only shows running containers. Adding the '-a' flag (all) lists every container on the host, regardless of its current state."
+        },
+        {
+            q: "Which statement about Docker volumes is TRUE?",
+            options: [
+                "Docker volumes are stored inside a container’s writable layer.",
+                "Docker volumes are automatically deleted when a container stops.",
+                "Docker volumes persist independently of the container lifecycle.",
+                "Docker volumes can only be attached to one container at a time."
+            ],
+            a: 2,
+            description: "Docker volumes are designed for persistent data storage. They exist outside the container's writable layer and remain intact even if the container is stopped or deleted."
+        },
+        {
+            q: "Which statement best describes the relationship between containers and virtual machines?",
+            options: [
+                "A single container usually includes its own kernel, separate from the host.",
+                "Multiple containers can share the same OS kernel while running on a VM.",
+                "Containers must run directly on bare-metal hardware and cannot run inside VMs.",
+                "VMs must always run inside containers for isolation."
+            ],
+            a: 1,
+            description: "Containers share the host's operating system kernel. This means multiple containers can run on a single Virtual Machine by sharing that VM's specific kernel."
+        },
+        {
+            q: "Which of the following is NOT a primary responsibility of Kubernetes?",
+            options: [
+                "Automatic restart of failed containers.",
+                "Scheduling containers across a cluster of nodes.",
+                "Providing low-level hardware virtualization via hypervisor extensions.",
+                "Load balancing traffic across multiple replicas of a service."
+            ],
+            a: 2,
+            description: "Kubernetes is a container orchestrator. It manages container lifecycles and networking but does not provide low-level hardware virtualization; that is the role of a hypervisor."
+        },
+        {
+            q: "In a Green Cloud data center, which strategy most directly reduces energy consumption while maintaining SLA as much as possible?",
+            options: [
+                "Keeping all servers powered on but underutilized to handle sudden spikes.",
+                "Randomly assigning VMs to physical hosts to spread heat evenly.",
+                "Consolidating VMs onto fewer physical servers and powering down idle machines.",
+                "Running all workloads on the oldest hardware first to extend newer hardware lifetime."
+            ],
+            a: 2,
+            description: "Energy-aware consolidation involves packing VMs onto the minimum number of physical hosts needed. This allows unused servers to be powered down, significantly reducing electricity usage."
+        },
+        {
+            q: "Which is the biggest practical challenge when integrating wireless sensor networks (WSNs) directly into a Sensor-Cloud?",
+            options: [
+                "Sensors typically cannot support full virtualization due to limited compute/memory.",
+                "Sensor nodes always have plentiful power and do not need energy-aware designs.",
+                "Sensors typically produce data that is low-volume, homogeneous and trivial to store.",
+                "Sensors natively run container orchestrators like Kubernetes."
+            ],
+            a: 0,
+            description: "Sensor nodes are resource-constrained devices with limited CPU and memory. This makes it impossible for them to run traditional virtualization or heavy orchestration software directly."
+        },
+        {
+            q: "Which architecture is most appropriate to support ultra-low-latency IoT applications that cannot tolerate high round-trip time to a distant cloud?",
+            options: [
+                "Rely solely on centralized cloud data centers located far from devices.",
+                "Use edge/fog computing nodes closer to the devices for processing.",
+                "Buffer all data at the cloud and respond in large periodic batches.",
+                "Disable any local processing on devices and send raw data directly to the cloud."
+            ],
+            a: 1,
+            description: "Edge and Fog computing move processing power physically closer to the data source. This drastically reduces the network latency compared to sending data to a distant central cloud."
+        },
+        {
+            q: "Why is it often necessary to preprocess or aggregate sensor data before long-term storage in large-scale IoT/Sensor Cloud systems?",
+            options: [
+                "To reduce rapidly growing storage and processing costs from raw high-volume data",
+                "Because all sensor data is already compressed and easy to store",
+                "To eliminate the need for cloud infrastructure",
+                "To make sensors consume more battery power"
+            ],
+            a: 0,
+            description: "IoT devices generate massive volumes of raw data. Preprocessing or aggregating this data at the edge reduces the amount of information sent to the cloud, lowering storage and cost requirements."
+        },
+        {
+            q: "Consider these statements: 1. Virtual sensors can be created by combining data from multiple physical sensors. 2. Sensor Cloud virtualization allows multiple apps to share the same physical sensors. Which is correct?",
+            options: [
+                "Statement 1 is True and Statement 2 is False",
+                "Statement 1 is False and Statement 2 is True",
+                "Both statements are True",
+                "Both statements are False"
+            ],
+            a: 2,
+            description: "Sensor virtualization abstracts physical hardware. This allows the creation of complex logical sensors from multiple physical ones and enables multiple applications to share the same sensor hardware."
+        },
+        {
+            q: "What is the primary reason latency-critical IoT applications (e.g., autonomous vehicle control) cannot rely solely on a centralized cloud?",
+            options: [
+                "Cloud data centers are too expensive to operate.",
+                "Physical network distance to cloud data centers introduces unacceptable round-trip latency.",
+                "Cloud platforms do not support real-time data analytics.",
+                "IoT devices cannot connect to the internet continuously."
+            ],
+            a: 1,
+            description: "For real-time control, every millisecond counts. The physical distance between a device and a central cloud creates propagation delays that are too slow for safely controlling moving vehicles."
+        }
+    ],
+  9: [
+        {
+            q: "Which of the following best describes the difference between cloud computing and fog computing?",
+            options: [
+                "Cloud computing processes data near IoT devices, while fog computing processes data only in centralized data centers.",
+                "Cloud computing offers distributed processing across gateways, while fog computing performs computation only in the cloud core.",
+                "Cloud computing relies on centralized data centers for computation, whereas fog computing distributes processing closer to end devices through intermediate nodes.",
+                "Cloud computing is used only for storage, while fog computing is used only for real-time analytics."
+            ],
+            a: 2,
+            description: "Cloud computing uses centralized data centers that may be far from users. Fog computing extends these services closer to the edge via intermediate nodes like gateways, reducing delay and bandwidth usage."
+        },
+        {
+            q: "An autonomous vehicle that must instantly detect obstacles and apply brakes should primarily rely on:",
+            options: ["Cloud computing", "Fog computing", "Edge computing", "Centralized data warehouse"],
+            a: 2,
+            description: "Safety-critical actions like braking require ultra-low latency. Processing must happen on the vehicle's onboard edge system to avoid the network delays inherent in fog or cloud communication."
+        },
+        {
+            q: "In terms of physical proximity to end devices (closest to farthest), which order is correct?",
+            options: ["Cloud → Fog → Edge", "Edge → Fog → Cloud", "Fog → Edge → Cloud", "Edge → Cloud → Fog"],
+            a: 1,
+            description: "Edge computing is at the data source, Fog computing is at an intermediate level (local servers/gateways), and Cloud computing is the farthest layer in centralized data centers."
+        },
+        {
+            q: "Which resource management strategy is most important to prevent overload when many edge devices send data to nearby fog nodes?",
+            options: [
+                "Increasing storage capacity at a single fog node",
+                "Static task allocation",
+                "Load balancing across fog nodes",
+                "Sending all data directly to the cloud"
+            ],
+            a: 2,
+            description: "Load balancing prevents congestion by spreading tasks across multiple fog nodes. This ensures that no single node becomes a bottleneck, keeping latency low for all connected devices."
+        },
+        {
+            q: "Which statement best explains task offloading decisions in a fog–edge–cloud architecture?",
+            options: [
+                "All tasks must first be processed in the cloud before reaching fog or edge",
+                "Edge devices always offload tasks to the cloud, bypassing fog",
+                "Time-critical tasks are handled at edge/fog, while computation-intensive but delay-tolerant tasks are sent to the cloud",
+                "Fog nodes only store data and do not participate in computation"
+            ],
+            a: 2,
+            description: "This layered approach balances response time with resource power. Latency-sensitive tasks stay close to the user (edge/fog), while heavy, non-urgent processing is sent to the high-capacity cloud."
+        },
+        {
+            q: "Which factor most strongly influences whether a task should be executed at the edge instead of the cloud?",
+            options: ["Data archival requirements", "Latency sensitivity of the application", "Cloud storage capacity", "Size of historical datasets"],
+            a: 1,
+            description: "The primary driver for edge computing is the need for speed. Applications that require immediate responses (like emergency systems) cannot wait for the round-trip time to a distant cloud."
+        },
+        {
+            q: "Which metric is most directly optimized when moving computation from cloud to fog nodes?",
+            options: ["Disk storage size", "Network latency", "Data encryption level", "Database consistency"],
+            a: 1,
+            description: "Since fog nodes are geographically much closer to the end devices than a central cloud, shifting tasks to them primarily reduces communication delay (network latency)."
+        },
+        {
+            q: "Which issue is most critical for maintaining trust among Cloud Service Providers (CSPs) in a cloud federation?",
+            options: [
+                "Uniform hardware configuration across all CSPs",
+                "Standardized pricing models only",
+                "Federated identity management and secure SLA enforcement",
+                "Centralized ownership of all federated data centers"
+            ],
+            a: 2,
+            description: "Trust in a federation of independent providers relies on secure identity management and strict enforcement of service level agreements (SLAs) to ensure resources are shared safely and reliably."
+        },
+        {
+            q: "Which architectural mechanism most enables interoperability in a cloud federation?",
+            options: [
+                "Proprietary APIs unique to each CSP",
+                "Closed resource management policies",
+                "Standardized interfaces and open protocols (e.g., REST, OCCI, CIMI)",
+                "Centralized control by a single dominant CSP"
+            ],
+            a: 2,
+            description: "Interoperability between different cloud platforms is achieved through open standards and protocols like REST or OCCI, which allow different systems to communicate and exchange data seamlessly."
+        },
+        {
+            q: "Which scenario best justifies the need for workload migration in a hybrid cloud federation?",
+            options: [
+                "When all workloads have identical security and compliance requirements",
+                "When private cloud resources are underutilized and public cloud is idle",
+                "When sensitive workloads must remain on private infrastructure, but burst workloads require additional public cloud capacity",
+                "When interoperability between clouds is intentionally restricted"
+            ],
+            a: 2,
+            description: "Workload migration is essential in hybrid models to keep sensitive data on-premise while 'bursting' into the public cloud for additional, scalable capacity during peak demand periods."
+        }
+    ],
+ 11: [
+        {
+            q: "Which characteristic most distinguishes Dew computing from Edge computing?",
+            options: [
+                "Both rely completely on continuous internet connectivity",
+                "Dew computing nodes can operate fully offline and later synchronize with the cloud",
+                "Edge computing provides only storage, while dew provides computation",
+                "Dew computing replaces cloud infrastructure entirely"
+            ],
+            a: 1,
+            description: "Dew computing emphasizes autonomous local operation where devices function without network access and sync later. Edge computing reduces latency but often still depends on a networked infrastructure."
+        },
+        {
+            q: "Which application scenario best fits Dew computing?",
+            options: [
+                "Real-time stock trading requiring constant global updates",
+                "Remote rural education systems with unstable internet connectivity",
+                "High-performance weather modeling in supercomputers",
+                "Centralized banking transaction processing"
+            ],
+            a: 1,
+            description: "Dew computing is ideal for environments with intermittent connectivity, like rural education or remote healthcare, where devices must function locally and sync whenever they are back online."
+        },
+        {
+            q: "Which layer in Dew computing is primarily responsible for conflict resolution after offline operation?",
+            options: [
+                "Physical sensor layer",
+                "Dew layer device",
+                "Cloud layer synchronization service",
+                "Network routing layer"
+            ],
+            a: 2,
+            description: "While dew devices modify data locally while offline, the logic for detecting and resolving data conflicts typically happens at the cloud layer during synchronization to maintain global consistency."
+        },
+        {
+            q: "What is the main trade-off introduced by Dew computing?",
+            options: [
+                "Reduced latency vs increased hardware virtualization",
+                "Local autonomy vs data consistency complexity",
+                "High scalability vs low storage",
+                "Better security vs no offline capability"
+            ],
+            a: 1,
+            description: "Increasing local autonomy allows devices to work independently, but synchronizing those independent changes later introduces significant complexity in maintaining data consistency."
+        },
+        {
+            q: "Which issue commonly affects performance in serverless applications?",
+            options: [
+                "VM hypervisor overhead",
+                "Cold start latency",
+                "Disk fragmentation",
+                "Hardware driver conflicts"
+            ],
+            a: 1,
+            description: "A 'cold start' occurs when a serverless platform must initialize a new container to run a function that hasn't been used recently, causing a noticeable delay in execution."
+        },
+        {
+            q: "Why are serverless functions typically designed to be stateless?",
+            options: [
+                "To reduce electricity consumption",
+                "Because local storage is unlimited",
+                "To allow automatic scaling and parallel execution without dependency conflicts",
+                "To avoid using APIs"
+            ],
+            a: 2,
+            description: "Statelessness ensures each function call is independent. This allows the cloud provider to launch many instances of the function at once to handle high traffic without coordination errors."
+        },
+        {
+            q: "Which factor most limits the suitability of FaaS for long-running scientific simulations?",
+            options: [
+                "Lack of GPU support",
+                "Function execution time limits enforced by providers",
+                "No internet access",
+                "Inability to process data streams"
+            ],
+            a: 1,
+            description: "FaaS providers enforce strict maximum execution timeouts (usually minutes). HPC simulations often take much longer, making them incompatible with the serverless model."
+        },
+        {
+            q: "Why is direct file system storage unreliable for persistent data in FaaS?",
+            options: [
+                "File systems are encrypted",
+                "Functions run on different hosts and local storage is ephemeral",
+                "Storage speed is too slow",
+                "Providers disable disk access"
+            ],
+            a: 1,
+            description: "Serverless instances are temporary (ephemeral). Data saved to the local disk is lost once the function finishes because the next invocation may run on a completely different physical machine."
+        },
+        {
+            q: "Which of the following describes a hard limit for AWS Lambda function execution?",
+            options: [
+                "Functions can run indefinitely until manually stopped",
+                "Each AWS Lambda invocation has a maximum timeout of 15 minutes",
+                "AWS Lambda allows up to 1 hour per invocation",
+                "AWS Lambda timeouts are configurable with no upper bound"
+            ],
+            a: 1,
+            description: "AWS Lambda has a hard maximum timeout of 900 seconds (15 minutes). If a function does not complete within this time, it is automatically terminated by the platform."
+        },
+        {
+            q: "Amazon Redshift is a fully managed cloud data warehouse service provided by ___________.",
+            options: ["Google", "Microsoft", "Amazon Web Services", "Oracle"],
+            a: 2,
+            description: "Amazon Redshift is the managed data warehousing solution from AWS, optimized for large-scale analytics and complex queries using a distributed architecture."
+        }
+    ]
+};let currentQuestions = [];
+let currentIdx = 0;
+let score = 0;
+let currentWeek = "1";
+
+function initQuiz(jumpToIdx = 0) {
+    currentWeek = document.getElementById('week-selector').value;
+    currentQuestions = quizData[currentWeek] || [];
+    currentIdx = jumpToIdx;
+    score = 0;
+    renderQuestion();
+    updateUI();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderQuestion() {
+    const container = document.getElementById('quiz-container');
+    const q = currentQuestions[currentIdx];
+    
+    if(!q) {
+        container.innerHTML = `<div style="text-align:center"><h2>Assignment Complete!</h2><p>Your Score: ${score}/${currentQuestions.length}</p><button class="btn btn-submit" onclick="initQuiz()">Restart</button></div>`;
+        document.querySelector('.controls').style.display = 'none';
+        return;
+    }
+
+    document.querySelector('.controls').style.display = 'flex';
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('submit-btn').style.display = 'block';
+    document.getElementById('submit-btn').disabled = true;
+
+    let html = `<div class="q-text">Q${currentIdx + 1}: ${q.q}</div>`;
+    q.options.forEach((opt, i) => {
+        html += `
+            <label class="option-label" id="opt-label-${i}">
+                <input type="radio" name="quiz-opt" value="${i}" onclick="enableSubmit(${i})">
+                ${opt}
+            </label>
+        `;
+    });
+    html += `<div id="feedback" class="feedback-area"></div>`;
+    container.innerHTML = html;
+}
+
+function enableSubmit(index) {
+    document.getElementById('submit-btn').disabled = false;
+    document.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
+    document.getElementById(`opt-label-${index}`).classList.add('selected');
+}
+
+function checkAnswer() {
+    const selected = document.querySelector('input[name="quiz-opt"]:checked');
+    const answer = parseInt(selected.value);
+    const q = currentQuestions[currentIdx];
+    const feedback = document.getElementById('feedback');
+    const isCorrect = answer === q.a;
+
+    feedback.style.display = 'block';
+    document.getElementById('submit-btn').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'block';
+
+    if(isCorrect) {
+        score++;
+        feedback.className = 'feedback-area feedback-correct';
+        feedback.innerHTML = `<strong>Correct!</strong>`;
+        removeFromErrorLog(q.q);
+    } else {
+        feedback.className = 'feedback-area feedback-wrong';
+        feedback.innerHTML = `<strong>Incorrect.</strong> Correct answer: ${q.options[q.a]}`;
+        saveToErrorLog(q.q, q.options[q.a], q.options[answer], q.description, currentIdx, currentWeek);
+    }
+    feedback.innerHTML += `<div class="description-box">${q.description}</div>`;
+    document.querySelectorAll('input[name="quiz-opt"]').forEach(i => i.disabled = true);
+    updateUI();
+}
+
+function nextQuestion() {
+    currentIdx++;
+    renderQuestion();
+    updateUI();
+}
+
+function updateUI() {
+    document.getElementById('current-score').innerText = `${score} / ${currentQuestions.length}`;
+    document.getElementById('q-count').innerText = `${currentIdx + 1} / ${currentQuestions.length}`;
+    const progress = currentQuestions.length > 0 ? (currentIdx / currentQuestions.length) * 100 : 0;
+    document.getElementById('progress-bar').style.width = progress + '%';
+}
+
+function saveToErrorLog(q, a, wrong, desc, idx, week) {
+    let logs = JSON.parse(localStorage.getItem('eia_errors') || '[]');
+    if (!logs.some(l => l.q === q)) {
+        logs.push({ q, a, wrong, desc, idx, week });
+        localStorage.setItem('eia_errors', JSON.stringify(logs));
+        renderLogs();
+    }
+}
+
+function removeFromErrorLog(questionText) {
+    let logs = JSON.parse(localStorage.getItem('eia_errors') || '[]');
+    logs = logs.filter(l => l.q !== questionText);
+    localStorage.setItem('eia_errors', JSON.stringify(logs));
+    renderLogs();
+}
+
+function renderLogs() {
+    const logs = JSON.parse(localStorage.getItem('eia_errors') || '[]');
+    const container = document.getElementById('wrong-log');
+    if(logs.length === 0) { container.innerHTML = `<p style="font-size:12px; opacity:0.5; text-align:center;">No mistakes yet!</p>`; return; }
+    container.innerHTML = logs.reverse().map((l, i) => `
+        <div class="log-card" onclick="this.classList.toggle('expanded')">
+            <span style="background:var(--accent); color:white; padding:2px 6px; border-radius:4px; font-size:9px; float:right;" onclick="jumpTo('${l.week}', ${l.idx})">JUMP</span>
+            <strong>Q:</strong> ${l.q}
+            <div class="log-details" style="display:none; margin-top:10px; font-size:13px; border-top:1px solid var(--card-border); padding-top:10px;">
+                <p style="color:var(--danger)">Wrong: ${l.wrong}</p>
+                <p style="color:var(--success)">Correct: ${l.a}</p>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add logic to expand log cards
+    document.querySelectorAll('.log-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if(e.target.tagName !== 'SPAN') {
+                const details = this.querySelector('.log-details');
+                details.style.display = details.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+    });
+}
+
+function jumpTo(week, idx) {
+    event.stopPropagation();
+    document.getElementById('week-selector').value = week;
+    initQuiz(idx);
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('theme-btn');
+    body.classList.toggle('dark-mode');
+    const isDark = body.classList.contains('dark-mode');
+    btn.innerHTML = isDark ? "☀️" : "🌙";
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+function clearData() { if(confirm("Reset all data?")) { localStorage.clear(); location.reload(); } }
+
+window.onload = () => {
+    const saved = localStorage.getItem('theme') || 'dark';
+    if(saved === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('theme-btn').innerHTML = "☀️";
+    } else {
+        document.body.classList.remove('dark-mode');
+        document.getElementById('theme-btn').innerHTML = "🌙";
+    }
+    initQuiz();
+    renderLogs();
+};
+</script>
+</body>
+</html>
