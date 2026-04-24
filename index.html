@@ -1145,6 +1145,116 @@ const quizData = {
             description: "Workload migration is essential in hybrid models to keep sensitive data on-premise while 'bursting' into the public cloud for additional, scalable capacity during peak demand periods."
         }
     ],
+    10: [
+    {
+      "q": "Which issue is most critical when performing live VM migration across geographically distributed data centers? [cite: 9, 10]",
+      "options": [
+        "Uniform CPU clock speed across hosts",
+        "High network latency and bandwidth variability between sites",
+        "Availability of local storage at the source host",
+        "Increasing the number of VM snapshots"
+      ],
+      "a": 1,
+      "description": "Live VM migration across distant data centers depends heavily on network performance. High latency and fluctuating bandwidth can slow memory state transfer and risk service degradation. [cite: 15, 16, 17, 19]"
+    },
+    {
+      "q": "Which migration technique generally consumes the highest network bandwidth? [cite: 20, 21]",
+      "options": [
+        "Cold migration",
+        "Pre-copy migration",
+        "Post-copy migration",
+        "Offline image transfer"
+      ],
+      "a": 1,
+      "description": "In pre-copy migration, memory pages (especially frequently modified 'dirty pages') are transferred multiple times while the VM is still running, increasing total network traffic. [cite: 26, 27, 28]"
+    },
+    {
+      "q": "Which factor most increases energy consumption during live migration in fog environments? [cite: 32, 33]",
+      "options": [
+        "Small VM memory footprint",
+        "Short network distance between nodes",
+        "Frequent retransmission of dirty memory pages",
+        "Low CPU utilization on source host"
+      ],
+      "a": 2,
+      "description": "Repeatedly modified memory pages must be retransmitted multiple times in live migration, which increases network usage, CPU activity, and duration—all raising energy consumption. [cite: 38, 39, 40]"
+    },
+    {
+      "q": "In container-based cloud environments, what is the primary role of Kubernetes? [cite: 42, 43]",
+      "options": [
+        "To build container images from application source code",
+        "To provide low-level container runtime like Docker Engine",
+        "To orchestrate, schedule, scale, and manage containers across clusters",
+        "To replace virtual machines entirely"
+      ],
+      "a": 2,
+      "description": "Kubernetes is an orchestration platform that manages deployment, scheduling, auto-scaling, and self-healing across multiple nodes. [cite: 48, 52]"
+    },
+    {
+      "q": "Which Docker component is responsible for handling build instructions defined in a Dockerfile? [cite: 55, 56]",
+      "options": [
+        "Docker Hub",
+        "Docker CLI",
+        "Docker Daemon",
+        "Docker Registry"
+      ],
+      "a": 2,
+      "description": "The Docker CLI sends requests to the Docker Daemon, which processes Dockerfile instructions, builds layers, and creates the image. [cite: 61, 62]"
+    },
+    {
+      "q": "Which Docker feature ensures that a container runs in isolation from the host system? [cite: 64, 65]",
+      "options": [
+        "Hypervisor",
+        "Linux namespaces and cgroups",
+        "Virtual machine snapshots",
+        "Docker Swarm"
+      ],
+      "a": 1,
+      "description": "Docker uses Linux namespaces for process isolation and control groups (cgroups) for resource limits like CPU and memory. [cite: 70, 74]"
+    },
+    {
+      "q": "Statement 1: Docker volumes persist data even if a container is deleted. Statement 2: Data stored inside a container's writable layer remains safe after the container is removed. [cite: 76, 77, 78]",
+      "options": [
+        "Only statement 1 is true",
+        "Only statement 2 is true",
+        "Both statements are true",
+        "Both statements are false"
+      ],
+      "a": 0,
+      "description": "Docker volumes are managed outside the container's lifecycle and persist, whereas the container's writable layer is deleted along with the container. [cite: 83, 84, 85]"
+    },
+    {
+      "q": "In Docker, _________ is responsible for creating and managing containers on the host system. [cite: 86, 87, 88]",
+      "options": [
+        "Docker Hub",
+        "Docker Engine",
+        "Kubernetes",
+        "Dockerfile"
+      ],
+      "a": 1,
+      "description": "Docker Engine is the core runtime that builds, runs, and manages containers on a host machine. [cite: 96, 97]"
+    },
+    {
+      "q": "If a VM has 64 GB memory and the migration channel supports 8 MB/sec, what is the total migration time and downtime for non-live VM migration? [cite: 99, 100]",
+      "options": [
+        "1 hour, 1 hour",
+        "2 hours, 2 hours",
+        "2.5 hours, 2.5 hours",
+        "3 hours, 3 hours"
+      ],
+      "a": 1,
+      "description": "Calculation: (64 * 2^30) / (8 * 2^20) = 8192 seconds, which is approximately 2.27 hours (rounded to 2 hours). In non-live migration, migration time equals downtime. [cite: 105, 106]"
+    },
+    {
+      "q": "Containers require a full guest operating system to run. [cite: 107, 111]",
+      "options": [
+        "True",
+        "False"
+      ],
+      "a": 1,
+      "description": "Containers share the host OS kernel and do not require a full guest operating system, unlike virtual machines. [cite: 114, 116]"
+    }
+  ],
  11: [
         {
             q: "Which characteristic most distinguishes Dew computing from Edge computing?",
